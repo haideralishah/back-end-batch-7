@@ -1,0 +1,25 @@
+{
+  "name": "saylani_learning",
+  "version": "1.0.0",
+  "description": "This is express hello world app.",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/haideralishah/back-end-batch-7.git"
+  },
+  "author": "Haider Ali",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/haideralishah/back-end-batch-7/issues"
+  },
+  "homepage": "https://github.com/haideralishah/back-end-batch-7#readme",
+  "dependencies": {
+    "express": "^4.17.1",
+    "nodemon": "^2.0.15"
+  }
+}
