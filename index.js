@@ -215,10 +215,12 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
+import Student from './models/student.js'
 
 const app = express();
 
-mongoose.connect("DatabaseURL");
+mongoose.connect("mongodb+srv://akbar:saylani123@cluster0.no8pi.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
+
 mongoose.connection.once('open', () => {
     console.log('=================== ISI Secrete Database Connected ===================');
 });
@@ -231,10 +233,23 @@ app.use(bodyParser.json({ limit: '2mb' }));
 app.use(bodyParser.urlencoded({ extended: false }))
 
 
-app.use((req, res) => {
-    console.log(req.body, '***************');
-    res.end();
+// app.use((req, res) => {
+//     console.log(req.body, '***************');
+//     res.end();
+// });
+
+app.post('/add-student', async (req, res) => {
+    console.log(req.body);
+    let student = new Student({
+        studentName: req.body.stName,
+        email: req.body.emailAddress,
+        rollNumber: req.body.rollNum
+    });
+    let savedData = await student.save();
+
+    res.json(savedData);
 });
+
 
 app.listen('5000', () => {
     console.log('=================== server started on 5000 ===================');
