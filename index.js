@@ -216,6 +216,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import Student from './models/student.js'
+import morgan from 'morgan';
 
 const app = express();
 
@@ -232,11 +233,32 @@ mongoose.connection.on('error', () => {
 app.use(bodyParser.json({ limit: '2mb' }));
 app.use(bodyParser.urlencoded({ extended: false }))
 
+app.use(morgan('tiny'));
 
-// app.use((req, res) => {
-//     console.log(req.body, '***************');
-//     res.end();
-// });
+app.get('/get-all-students', async (req, res) => {
+    console.log(req.url);
+    let allStudents = await Student.find().limit(3); // returns array
+    res.json(allStudents);
+});
+
+
+app.get('/get-student/:studentName', async (req, res) => {
+    let { studentName } = req.params;
+    console.log(studentName);
+    let allStudents = await Student.find({ studentName: studentName }); // returns array
+    res.json(allStudents);
+});
+
+
+
+app.get('/get-student-pagination/:pageNumber/:studentPerPage', async (req, res) => {
+    let { pageNumber, studentPerPage } = req.params;
+    console.log(pageNumber, studentPerPage)
+    let skipCount = (pageNumber - 1) * studentPerPage;
+    let allStudents = await Student.find().limit(Number(studentPerPage)).skip(skipCount); // returns array
+    res.json(allStudents);
+});
+
 
 app.post('/add-student', async (req, res) => {
     console.log(req.body);
@@ -245,11 +267,39 @@ app.post('/add-student', async (req, res) => {
         email: req.body.emailAddress,
         rollNumber: req.body.rollNum
     });
-    let savedData = await student.save();
+    try {
+        let savedData = await student.save();
+        res.json(savedData);
+    } catch (e) {
+        console.log(e);
+        res.json(e);
+    }
 
-    res.json(savedData);
+
+
+    // student.save(function (e, savedData) {
+    //     if (express) {
+    //         res.json(e);
+    //     }
+    //     else {
+    //         res.json(savedData);
+    //     }
+    // })
+
+    // student.save()
+    //     .then((savedData) => {
+    //         res.json(savedData);
+    //     })
+    //     .catch((e) => {
+    //         res.json(e);
+    //     })
+
 });
 
+// app.use((req, res) => {
+//     console.log(req.body, '***************');
+//     res.end();
+// });
 
 app.listen('5000', () => {
     console.log('=================== server started on 5000 ===================');
