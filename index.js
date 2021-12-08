@@ -217,6 +217,7 @@ import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import Student from './models/student.js'
 import morgan from 'morgan';
+import cors from 'cors';
 
 const app = express();
 
@@ -230,10 +231,38 @@ mongoose.connection.on('error', () => {
 });
 
 
+app.use(cors());
+
 app.use(bodyParser.json({ limit: '2mb' }));
 app.use(bodyParser.urlencoded({ extended: false }))
 
 app.use(morgan('tiny'));
+
+
+
+app.get('/get-one-student/:studentName', async (req, res) => {
+    let { studentName } = req.params;
+    console.log(studentName);
+    let allStudents = await Student.findOne({ studentName: studentName }); // returns one object
+    res.json(allStudents);
+});
+
+app.post('/update-student/:id', async (req, res) => {
+    let { id } = req.params;
+    // console.log(req.body, id);
+    let updated = await Student.findOneAndUpdate({ _id: id },
+        { rollNumber: req.body.rollNumber });
+    res.json(updated);
+});
+
+app.post('/delete-student/:id', async (req, res) => {
+    let { id } = req.params;
+    // console.log(req.body, id);
+    let deleted = await Student.findOneAndDelete({ _id: id })
+    res.json(deleted);
+});
+
+
 
 app.get('/get-all-students', async (req, res) => {
     console.log(req.url);
