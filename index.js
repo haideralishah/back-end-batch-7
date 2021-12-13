@@ -218,6 +218,8 @@ import mongoose from 'mongoose';
 import Student from './models/student.js'
 import morgan from 'morgan';
 import cors from 'cors';
+import User from './models/user.js';
+import bcrypt from 'bcrypt';
 
 const app = express();
 
@@ -237,6 +239,68 @@ app.use(bodyParser.json({ limit: '2mb' }));
 app.use(bodyParser.urlencoded({ extended: false }))
 
 app.use(morgan('tiny'));
+
+
+async function makeHashedPassword(password) {
+    let SALT_ROUND = 10;
+    try {
+        let hashedPassowrd = await bcrypt.hash(password, SALT_ROUND);
+        return hashedPassowrd;
+    } catch (e) {
+        console.log(e);
+    }
+}
+
+app.post("/signup", async (req, res, next) => {
+    console.log(req.body);
+    const { email, password, username } = req.body;
+
+    let hashedPassword = await makeHashedPassword(password)
+    let user = new User({
+        email,
+        password: hashedPassword,
+        username
+    })
+
+    try {
+        let savedUser = await user.save();
+        res.json(savedUser);
+    } catch (e) {
+        res.json(e);
+    }
+
+})
+
+async function matchPassword(password, hashedPassword) {
+    return await bcrypt.compare(password, hashedPassword)
+}
+
+app.post("/login", async (req, res, next) => {
+    const { email, password } = req.body;
+    try {
+        let emailFound = await User.findOne({ email });
+        if (emailFound) {
+            let isVerified = await matchPassword(password, emailFound.password);
+
+            if (isVerified) {
+                res.json({ message: "User is authorized.", user: emailFound });
+            }
+            else {
+                res.json({ error: "Incorrect password." });
+            }
+        }
+        else {
+            res.json({ error: "User not found, please enter valid email address." });
+        }
+    } catch (e) {
+        console.log(e);
+        res.json(e);
+    }
+
+})
+
+
+
 
 
 
