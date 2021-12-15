@@ -219,11 +219,25 @@ import Student from './models/student.js'
 import morgan from 'morgan';
 import cors from 'cors';
 import User from './models/user.js';
+import Token from './models/token.js';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+
+dotenv.config();
+
+
+// import { randomBytes } from 'crypto';
+// const SECRETE_KEY = randomBytes(64).toString("hex");
+// console.log(SECRETE_KEY)
+
+const SECRETE_KEY = process.env.SECRETE_KEY;
+
+console.log(process.env.SECRETE_KEY)
 
 const app = express();
 
-mongoose.connect("mongodb+srv://akbar:saylani123@cluster0.no8pi.mongodb.net/myFirstDatabase?retryWrites=true&w=majority");
+mongoose.connect(process.env.mongoDBURI);
 
 mongoose.connection.once('open', () => {
     console.log('=================== ISI Secrete Database Connected ===================');
@@ -283,7 +297,17 @@ app.post("/login", async (req, res, next) => {
             let isVerified = await matchPassword(password, emailFound.password);
 
             if (isVerified) {
-                res.json({ message: "User is authorized.", user: emailFound });
+                var token = jwt.sign({
+                    userEmail: emailFound.email,
+                    password: emailFound.password,
+                    userName: emailFound.username,
+                    exp: (new Date("12 December 2022")).getTime()
+                }, SECRETE_KEY);
+                let newToken = new Token({ token, userId: emailFound._id })
+                await newToken.save();
+                console.log(token);
+
+                res.json({ message: "User is authorized.", user: emailFound, token });
             }
             else {
                 res.json({ error: "Incorrect password." });
@@ -302,6 +326,20 @@ app.post("/login", async (req, res, next) => {
 
 
 
+app.post("/verify-token", async (req, res, next) => {
+    // console.log(req.body);
+    const { token } = req.body;
+    let tokenFound = await Token.findOne({ token });
+    if (tokenFound) {
+        let verifiedInformation = await jwt.verify(token, SECRETE_KEY);
+        console.log(verifiedInformation);
+        res.end();
+    }
+    else {
+        res.json({ message: "Token invalid" });
+    }
+
+})
 
 
 app.get('/get-one-student/:studentName', async (req, res) => {
@@ -394,6 +432,6 @@ app.post('/add-student', async (req, res) => {
 //     res.end();
 // });
 
-app.listen('5000', () => {
-    console.log('=================== server started on 5000 ===================');
+app.listen(process.env.port, () => {
+    console.log(`=================== server started on ${process.env.port} ===================`);
 });
